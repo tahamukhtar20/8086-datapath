@@ -3,45 +3,17 @@
 - Tkinter 
 - Pygame
 
-## https://nustedupk0.sharepoint.com/:v:/s/kjfljsakfd/EULif_4-BqJHjr-es0Q8ZBgBKgrx8CvI80NQHmkmc7dqtw?e=ZvZJsZ
 
-## Link for the video explaining everything
+    ![work screenshot #1](Images/mhba.png)
+    ![work screenshot #2](Images/mhba2.png)
+    ![work screenshot #3](Images/bashar1.jpeg)
+    ![work screenshot #4](Images/bashar2.jpeg)
+    ![work screenshot #5](Images/hashir_mohsin.png)
+    ![work screenshot #6](Images/hashir_mohsin2.jpeg)
+    ![work screenshot #7](Images/taha1.jpeg)
+    ![work screenshot #8](Images/taha2.jpeg)
 
-
-## Name of people with their work on project
-- **GUI of Task-1 and basic GUI(shapes) of Task-2 -> Muhammad Hassan Bin Adeel**
-
-    ![work screenshot #1](mhba.png)
-    ![work screenshot #2](mhba2.png)
-
-- **Constraints of Task-1 and debugging of Task-2 and some GUI -> Bashar Siddiqui**
-
-    ![work screenshot #3](bashar1.jpeg)
-    ![work screenshot #4](bashar2.jpeg)
-
-- **Functionality of operations in Task-1 and Task-2 -> Syed Hashir Ahmed Kazi and Mohsin Khan**
-
-    ![work screenshot #5](hashir_mohsin.png)
-    ![work screenshot #6](hashir_mohsin2.jpeg)
-
-
-- **Debugging of Task-1 and Task-2 GUI and Logic -> Muhammad Taha Mukhtar**
-
-    ![work screenshot #7](taha1.jpeg)
-    ![work screenshot #8](taha2.jpeg)
-
-### GUI
-- Displaying input box
-- Displaying all registers and memory
-- Giving access to every register and memory element to logic builders
-- Drawing of shapes in logic block diagram in Task-2
-
-### Constraints
-- Checking user input according to assembly language rules
-- Not running and throwing error if instruction does not follow the rules
-- Run command iff all rules followed
-
-## Code Logic
+## What it Does
 - Calculation of machine code according to user input
 - Calculation and assignment of register values according to user input
 - Helps in simulation of instruction (in Task-2) according to 8086
@@ -52,12 +24,6 @@
     - In case of XOR,ADD,SUB,INC,DEC,NOT,AND,OR ALU will be used
     - In case of single operand operations, only red colour will highlight the operand
 
-## Commands Working and some assumtions
-- For direct addressing or accessing memory, only type in hexa. Binary not implemented
-- 11 commands working in Task-1
-- All 15 commands working in Task-2
-- If command not working in Task-1, then click on simulate button and it will work in Task-2
-- Do not enter ax in mul,imul,div,idiv as constraint missing in task-1 but again it does work in Task-2
 
 ## Example use of all instructions
 1. MOV 
@@ -84,11 +50,3 @@
     - sub ax,bx
 11. COMPLEMENT
     - comp ax
-12. MUL
-    - mul bx (Task-1 not working)
-13. IMUL
-    - imul bx (Task-1 not working)
-14. DIV
-    - div bx (Task-1 not working)
-15. IDIV
-    - idiv bx (Task-1 not working)
