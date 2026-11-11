@@ -32,11 +32,14 @@ export function useSimulator(program: Program, onStep?: () => void) {
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
 
-  // A new program stops the run and resets the memory window.
-  useEffect(() => {
+  // A new program stops the run and resets the memory window in the same render,
+  // so the Run timer can never step the new program.
+  const [shownProgram, setShownProgram] = useState(program);
+  if (shownProgram !== program) {
+    setShownProgram(program);
     setRunning(false);
     setDataBase(DATA_START);
-  }, [program]);
+  }
 
   const forward = useCallback((): boolean => {
     const cur = session.current!;

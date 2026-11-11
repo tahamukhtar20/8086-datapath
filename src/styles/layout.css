@@ -1,0 +1,154 @@
+/* Page shell. Desktop (wide and tall enough) fits one screen and switches between
+   edit mode (editor gets half the width) and run mode (the die gets the room, and
+   Encoding/Memory rise from below). Narrower screens stack the panels. */
+
+.app {
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 20px 16px 28px;
+}
+
+.top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.col-left {
+  grid-column: 1;
+  grid-row: 1;
+}
+.col-right {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (min-width: 1100px) and (min-height: 640px) {
+  .app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px;
+    max-width: 2000px;
+  }
+  .top-bar {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 22px;
+  }
+  .layout {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: clamp(340px, 26vw, 440px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 12px;
+    transition: grid-template-columns 520ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .layout.edit {
+    grid-template-columns: calc(50% - 6px) minmax(0, 1fr);
+  }
+  .col {
+    min-height: 0;
+    gap: 12px;
+  }
+  .col-left {
+    gap: 0;
+  }
+  .board-panel,
+  .editor-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Encoding and Memory rise from the bottom once the program runs. */
+  .info-wrap {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 520ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .layout.run .info-wrap {
+    grid-template-rows: 1fr;
+  }
+  .info-inner {
+    min-height: 0;
+    overflow: hidden;
+    padding-top: 12px;
+  }
+  /* Fixed height so stepping between instructions never resizes the editor above. */
+  .info-panel {
+    height: clamp(336px, 50vh, 396px);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(40px);
+    opacity: 0;
+    transition:
+      transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 300ms ease;
+  }
+  .layout.run .info-panel {
+    transform: none;
+    opacity: 1;
+    transition-delay: 140ms;
+  }
+  /* On the way out it sinks and fades while its space closes, instead of vanishing first. */
+  .layout.edit .info-panel {
+    visibility: hidden;
+    transition:
+      transform 520ms cubic-bezier(0.65, 0, 0.35, 1),
+      opacity 420ms ease-in,
+      visibility 0s 520ms;
+  }
+}
+
+/* Narrower screens: one column, die first. */
+@media (max-width: 1099.98px) {
+  .top-bar {
+    flex-wrap: wrap;
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .col {
+    display: contents;
+  }
+  .board-panel {
+    order: 1;
+  }
+  .editor-panel {
+    order: 2;
+  }
+  .state-panel {
+    order: 3;
+  }
+  .info-wrap {
+    order: 4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout,
+  .info-wrap,
+  .info-panel {
+    transition: none !important;
+  }
+}

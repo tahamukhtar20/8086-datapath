@@ -1,0 +1,178 @@
+/* Header links, toolbar buttons, selects and the phase pills. */
+.top-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.source-link {
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.source-link:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.btn.primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1405;
+  font-weight: 600;
+}
+.btn:focus-visible,
+.select:focus-visible,
+.pill:focus-visible,
+.icon-btn:focus-visible,
+.toggle input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.toggle input {
+  accent-color: var(--gold);
+  width: 16px;
+  height: 16px;
+}
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.small-btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  margin-left: auto;
+}
+
+/* ---------- phases ---------- */
+.phase-box {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 96px;
+}
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pill {
+  font: inherit;
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pill.past {
+  color: var(--text);
+  border-color: #46536a;
+}
+.pill.current {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1405;
+  font-weight: 600;
+}
+.phase-text {
+  font-size: 15px;
+  max-width: 90ch;
+}
+.phase-text.fault {
+  color: var(--dst);
+}
+
+@media (min-width: 1100px) and (min-height: 640px) {
+  .toolbar {
+    margin-bottom: 8px;
+  }
+  .phase-box {
+    margin-top: 8px;
+    min-height: 90px;
+  }
+}
+
+/* Phones: icon-only buttons except Step. */
+@media (max-width: 760px) {
+  .btn span {
+    display: none;
+  }
+  .btn.primary span {
+    display: inline;
+  }
+}

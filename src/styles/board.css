@@ -1,0 +1,303 @@
+/* The die diagram (SVG). */
+.board-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+}
+.board {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.board .pcb {
+  fill: var(--pcb);
+}
+.board .dot {
+  fill: #2d6b4c;
+  opacity: 0.35;
+}
+.board .package {
+  fill: #19191c;
+  stroke: #2c2c31;
+  stroke-width: 2;
+}
+.board .pkg-pin {
+  fill: #c9ced6;
+}
+.board .cavity {
+  fill: #2a2416;
+  stroke: #b8954f;
+  stroke-width: 1.2;
+}
+.board .die {
+  fill: var(--die);
+  stroke: #46526a;
+  stroke-width: 1;
+}
+.board .die-grid {
+  fill: none;
+  stroke: var(--die-grid);
+  stroke-width: 1;
+}
+.board .bond-pad {
+  fill: #b9c3d2;
+}
+.board .bond-wire {
+  fill: none;
+  stroke: #d6b062;
+  stroke-width: 1.1;
+  opacity: 0.8;
+}
+.board .stamp {
+  fill: #6f737c;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.board .frame {
+  fill: none;
+  stroke: rgba(200, 212, 230, 0.2);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 6;
+}
+.board .legend-bg {
+  fill: var(--die);
+}
+.board .silk {
+  fill: var(--silk);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+.board .silk.small {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.board .silk.tiny {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.board .silk.title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.board .silk.name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.board .silk.strong {
+  font-weight: 600;
+}
+.board .dim {
+  opacity: 0.45;
+}
+.board .read {
+  fill: var(--cyan);
+}
+.board .write {
+  fill: var(--gold);
+}
+
+.board .trace {
+  fill: none;
+  stroke: var(--metal);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.38;
+}
+.board .ext {
+  fill: none;
+  stroke: var(--copper);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+.board .trace.live,
+.board .ext.live {
+  stroke: var(--gold);
+  stroke-width: 3.6;
+  opacity: 1;
+}
+.board .trace.flow {
+  stroke: #fff7d6;
+  stroke-width: 2;
+  stroke-dasharray: 3 13;
+  opacity: 1;
+  animation: flow 0.7s linear infinite;
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.board .bus {
+  fill: none;
+  stroke: var(--metal);
+  stroke-width: 9;
+  stroke-linecap: round;
+  opacity: 0.32;
+}
+.board .bus.on {
+  stroke: var(--gold);
+  opacity: 0.85;
+}
+.board .via {
+  fill: #c3ccd9;
+  stroke: #5b667a;
+  stroke-width: 1;
+}
+
+.board .chipbody {
+  fill: var(--block);
+  stroke: var(--block-line);
+  stroke-width: 1.5;
+}
+.board .ic {
+  fill: #121214;
+  stroke: #2e2e33;
+}
+.board .block {
+  fill: var(--block);
+  stroke: var(--block-line);
+  stroke-width: 1.5;
+}
+.board .pin {
+  fill: #c9ced6;
+}
+.board .notch {
+  fill: #2e2e33;
+}
+.board .cell {
+  fill: #0b0e13;
+  stroke: var(--block-line);
+  stroke-width: 1.2;
+}
+.board .adder,
+.board .alu {
+  fill: var(--block);
+  stroke: #4a5870;
+  stroke-width: 1.5;
+}
+.board .sigma {
+  fill: var(--silk);
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 600;
+}
+.board .part {
+  transition:
+    stroke 0.2s,
+    fill 0.2s;
+}
+.board .part.on {
+  stroke: var(--gold);
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.55));
+}
+.board .part.src {
+  fill: rgba(78, 224, 160, 0.3);
+  stroke: var(--src);
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 6px rgba(78, 224, 160, 0.55));
+}
+.board .part.dst {
+  fill: rgba(255, 107, 91, 0.32);
+  stroke: var(--dst);
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 6px rgba(255, 107, 91, 0.55));
+}
+
+.board .value {
+  fill: #f4f7fa;
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 500;
+}
+.board .value.tiny {
+  font-size: 12px;
+}
+.board .value.small-value {
+  font-size: 14px;
+}
+.board .value.gold {
+  fill: var(--gold);
+}
+.board .value.changed {
+  animation: flash 1.2s ease-out;
+}
+@keyframes flash {
+  0% {
+    fill: var(--gold);
+  }
+  100% {
+    fill: #f4f7fa;
+  }
+}
+
+.board .lcd {
+  fill: #0a0d12;
+  stroke: var(--block-line);
+  stroke-width: 1.5;
+}
+.board .lcd.on {
+  stroke: var(--gold);
+}
+.board .lcd-text {
+  fill: #7dffb3;
+  font-family: var(--mono);
+  font-size: 16px;
+}
+.board .lcd-text.big {
+  font-size: 19px;
+  font-weight: 600;
+}
+.board .led {
+  fill: #2a3240;
+  stroke: #0b0e13;
+  stroke-width: 1.5;
+}
+.board .led.lit {
+  fill: var(--gold);
+}
+.board .led.changed {
+  stroke: var(--silk);
+  stroke-width: 2;
+}
+
+/* While the layout morphs, drop the glows so each frame paints cheaply. */
+.layout.morphing .board,
+.layout.morphing .board * {
+  filter: none !important;
+}
+.layout.morphing .board .trace.flow {
+  animation-play-state: paused;
+}
+
+@media (min-width: 1100px) and (min-height: 640px) {
+  /* The die fills whatever space the board panel has left. */
+  .board-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    contain: strict;
+  }
+  .board {
+    height: 100%;
+  }
+}
+
+/* Phones: keep the die readable and let it scroll sideways. */
+@media (max-width: 760px) {
+  .board {
+    width: 760px;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board .trace.flow,
+  .board .value.changed {
+    animation: none;
+  }
+}

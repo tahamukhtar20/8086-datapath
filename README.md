@@ -21,10 +21,16 @@ The model is simplified in one way: on a real 8086 the bus interface unit prefet
 
 ```
 src/cpu/assembler.ts   parser and encoder
-src/cpu/machine.ts     CPU state, flags, execution and the phase trace for the board
+src/cpu/machine.ts     machine state and the step loop (fetch, decode, dispatch)
+src/cpu/handlers.ts    one handler per instruction family
+src/cpu/context.ts     per-step register, memory and phase helpers
+src/cpu/alu.ts         arithmetic, flags and jump conditions
 src/cpu/examples.ts    example programs
-src/cpu/*.test.ts      encoder and execution tests (node --test)
-src/ui/                board, editor and panels
+src/sim/session.ts     a running program, step history and the view model the UI draws
+src/sim/useSimulator.ts  React wrapper: run timer, memory window, reset on program change
+src/ui/                die, editor, panels, controls, keyboard shortcuts, edit/run mode
+src/styles/            one stylesheet per area; layout.css holds the page shell
+e2e/                   browser tests (layout fit, shortcuts, the edit/run morph)
 ```
 
 ## Run locally
@@ -32,7 +38,9 @@ src/ui/                board, editor and panels
 ```bash
 npm install
 npm run dev
-npm test
+npm test        # assembler, CPU and session unit tests
+npm run e2e     # browser tests; needs Google Chrome installed
+E2E_PERF=1 npm run e2e   # also time the edit/run animation (best on an idle machine)
 ```
 
 ## Deploy

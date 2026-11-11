@@ -1,0 +1,154 @@
+/* Code editor: address gutter, textarea, machine-code column, errors. */
+.editor-block {
+  margin-bottom: 8px;
+}
+.editor {
+  height: 416px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 140px;
+  grid-template-rows: minmax(0, 1fr);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b0e13;
+  font-family: var(--mono);
+  font-size: 13px;
+  transition: border-color 0.3s;
+}
+.gutter,
+.bytes {
+  overflow: hidden;
+  position: relative;
+  color: var(--muted);
+  font-size: 12px;
+  user-select: none;
+}
+.gutter {
+  border-right: 1px solid var(--line);
+  text-align: right;
+}
+.bytes {
+  border-left: 1px solid var(--line);
+}
+.gutter-line,
+.bytes-line {
+  height: 22px;
+  line-height: 22px;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.gutter-line.error {
+  color: var(--dst);
+}
+.gutter-line.current,
+.bytes-line.current {
+  color: var(--gold);
+}
+.code {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+.line-highlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(255, 209, 102, 0.12);
+  border-left: 2px solid var(--gold);
+  pointer-events: none;
+}
+.code textarea::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.code textarea::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 4px;
+}
+.code textarea::-webkit-scrollbar-track,
+.code textarea::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.code textarea {
+  scrollbar-color: var(--line-2) transparent;
+  scrollbar-width: thin;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  white-space: pre;
+  overflow: auto;
+  caret-color: var(--gold);
+  tab-size: 4;
+}
+.editor.readonly textarea {
+  cursor: pointer;
+  caret-color: transparent;
+}
+.editor.readonly {
+  border-color: var(--line);
+}
+.errors {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 107, 91, 0.4);
+  border-radius: 8px;
+  background: rgba(255, 107, 91, 0.08);
+  color: #ffb3aa;
+  font-size: 13px;
+}
+.errors li + li {
+  margin-top: 4px;
+}
+
+@media (min-width: 1100px) and (min-height: 640px) {
+  .editor-block {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  .editor {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    grid-template-columns: 48px minmax(0, 1fr) 140px;
+    transition:
+      grid-template-columns 520ms cubic-bezier(0.65, 0, 0.35, 1),
+      border-color 0.3s;
+  }
+  /* While running, the bytes live in the Encoding tab; give the code the room. */
+  .editor.readonly {
+    grid-template-columns: 48px minmax(0, 1fr) 0px;
+  }
+  .editor.readonly .bytes {
+    border-left-color: transparent;
+  }
+  .bytes {
+    font-size: 11px;
+  }
+  .errors {
+    max-height: 30%;
+    overflow: auto;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .editor {
+    grid-template-columns: 48px minmax(0, 1fr) 0;
+  }
+  .bytes {
+    display: none;
+  }
+}
