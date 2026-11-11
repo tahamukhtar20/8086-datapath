@@ -747,8 +747,13 @@ p {
   cursor: help;
 }
 .bitfield.focus {
-  outline: 2px solid var(--k);
-  outline-offset: 1px;
+  border-color: var(--k);
+  box-shadow: inset 0 0 0 1px var(--k);
+  background: color-mix(in srgb, var(--k) 22%, transparent);
+}
+.bitfield:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -4px;
 }
 .bitfield .bits {
   display: block;
