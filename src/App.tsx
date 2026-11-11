@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { CodeXml, Pause, Play, RotateCcw, StepBack, StepForward } from "lucide-react";
+import { BookOpen, CodeXml, Pause, Play, RotateCcw, StepBack, StepForward } from "lucide-react";
 import { assemble, hex, JCC } from "./cpu/assembler.ts";
 import { EXAMPLES } from "./cpu/examples.ts";
 import { Machine, step, undo } from "./cpu/machine.ts";
@@ -33,6 +33,8 @@ export default function App() {
   const [showPhases, setShowPhases] = useState(true);
   const [speed, setSpeed] = useState(SPEEDS[1].ms);
   const [dataBase, setDataBase] = useState(0x200);
+  const [tab, setTab] = useState<"enc" | "mem">("enc");
+  const [refOpen, setRefOpen] = useState(false);
   const phasesRef = useRef(showPhases);
   phasesRef.current = showPhases;
 
@@ -185,14 +187,20 @@ export default function App() {
   return (
     <div className="app">
       <header className="top-bar">
-        <div>
+        <div className="title">
           <h1>8086 Datapath</h1>
           <p className="muted">Write 8086 assembly, step through it, and watch each instruction cross the chip.</p>
         </div>
-        <a className="source-link" href={REPO}>
-          <CodeXml size={18} />
-          <span>Source</span>
-        </a>
+        <div className="top-actions">
+          <button type="button" className="source-link" onClick={() => setRefOpen(true)}>
+            <BookOpen size={18} />
+            <span>Reference</span>
+          </button>
+          <a className="source-link" href={REPO}>
+            <CodeXml size={18} />
+            <span>Source</span>
+          </a>
+        </div>
       </header>
 
       <main className="layout">
@@ -262,7 +270,6 @@ export default function App() {
             {endNote && <p className="muted small">{endNote}</p>}
           </div>
         </section>
-        <MemoryPanel regs={regs} peek={peek} written={written} read={read} dataBase={dataBase} setDataBase={setDataBase} />
         <StatePanel regs={regs} flags={flags} changed={changed} />
         </div>
 
@@ -279,20 +286,30 @@ export default function App() {
             </select>
           </div>
           <Editor value={source} onChange={setSource} program={program} currentLine={currentLine} />
-          <p className="muted small">
-            Loaded at CS:0100h. Comments start with <span className="mono">;</span>. Arrow keys step back and forward.
+          <p className="muted small hint">
+            Loaded at CS:0100h. <span className="mono">;</span> starts a comment. Arrow keys step.
           </p>
         </section>
 
-        <Encoding instr={encInstr} next={!!encInstr && encInstr !== cur?.instr} />
+        <section className="panel info-panel">
+          <div className="tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={tab === "enc"} className={`tab ${tab === "enc" ? "on" : ""}`} onClick={() => setTab("enc")}>
+              Encoding
+            </button>
+            <button type="button" role="tab" aria-selected={tab === "mem"} className={`tab ${tab === "mem" ? "on" : ""}`} onClick={() => setTab("mem")}>
+              Memory
+            </button>
+          </div>
+          {tab === "enc" ? (
+            <Encoding key={encInstr?.addr ?? -1} instr={encInstr} next={!!encInstr && encInstr !== cur?.instr} />
+          ) : (
+            <MemoryPanel regs={regs} peek={peek} written={written} read={read} dataBase={dataBase} setDataBase={setDataBase} />
+          )}
+        </section>
         </div>
       </main>
 
-      <Reference />
-
-      <footer className="footer muted">
-        Built by <a href="https://github.com/tahamukhtar20">@tahamukhtar20</a>
-      </footer>
+      <Reference open={refOpen} onClose={() => setRefOpen(false)} />
     </div>
   );
 }

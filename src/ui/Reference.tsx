@@ -1,3 +1,6 @@
+import { useEffect, useRef } from "react";
+import { X } from "lucide-react";
+
 const GROUPS: [string, string][] = [
   ["Move", "MOV, PUSH, POP"],
   ["Arithmetic", "ADD, ADC, SUB, SBB, CMP, INC, DEC, NEG"],
@@ -16,8 +19,22 @@ const MODES: [string, string][] = [
   ["Based indexed", "MOV [BP+DI-2], DX"],
 ];
 
-export function Reference() {
+export function Reference({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) d.showModal();
+    if (!open && d.open) d.close();
+  }, [open]);
   return (
+    <dialog ref={ref} className="ref-dialog" onClose={onClose} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="ref-head">
+        <h2>Reference</h2>
+        <button type="button" className="icon-btn" aria-label="Close reference" onClick={onClose}>
+          <X size={16} />
+        </button>
+      </div>
     <section className="reference">
       <div className="panel">
         <h2>Instructions</h2>
@@ -51,18 +68,23 @@ export function Reference() {
         </p>
       </div>
       <div className="panel">
-        <h2>Reading the board</h2>
+        <h2>Reading the die</h2>
         <ul className="key">
-          <li><span className="key-trace" /> Copper traces light up and pulse in the direction data moves.</li>
+          <li><span className="key-trace" /> Lines on the die light up and pulse in the direction data moves.</li>
           <li><span className="key-box dst" /> Destination: the register or memory being written.</li>
           <li><span className="key-box src" /> Source: where the value comes from.</li>
           <li><span className="key-box on" /> A unit taking part in this phase.</li>
         </ul>
         <p className="muted small">
-          The bus interface unit fetches bytes and forms addresses; the execution unit decodes and computes. Fetching runs
-          ahead of execution on a real 8086; here each instruction is shown on its own so the phases stay readable.
+          Everything inside the package is one silicon die. Memory is a separate chip, reached through the address and data
+          pins. Hover any unit for what it does. On a real 8086 fetching runs ahead of execution; here each instruction is
+          shown on its own so the phases stay readable.
         </p>
       </div>
     </section>
+      <p className="muted small ref-foot">
+        Built by <a href="https://github.com/tahamukhtar20">@tahamukhtar20</a>
+      </p>
+    </dialog>
   );
 }

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { hex } from "../cpu/assembler.ts";
 import { FLAG_NAMES, REG16, SREG } from "../cpu/types.ts";
@@ -14,37 +15,31 @@ const KIND_NAME: Record<Field["kind"], string> = {
 };
 
 export function Encoding({ instr, next }: { instr?: Instr; next: boolean }) {
-  if (!instr)
-    return (
-      <section className="panel">
-        <h2>Encoding</h2>
-        <p className="muted">No instruction at IP.</p>
-      </section>
-    );
+  const [focus, setFocus] = useState(0);
+  if (!instr) return <p className="muted">No instruction at IP.</p>;
   // Group fields into bytes.
-  const rows: Field[][] = [];
+  const rows: { field: Field; index: number }[][] = [];
   let bits = 0;
-  for (const f of instr.fields) {
+  instr.fields.forEach((field, index) => {
     if (bits % 8 === 0) rows.push([]);
-    rows.at(-1)!.push(f);
-    bits += f.bits.length;
-  }
+    rows.at(-1)!.push({ field, index });
+    bits += field.bits.length;
+  });
+  const f = instr.fields[Math.min(focus, instr.fields.length - 1)];
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <h2>Encoding</h2>
-        <span className="muted small">{next ? "next instruction" : "current instruction"}</span>
+    <div className="enc">
+      <div className="enc-head">
+        <span className="mono enc-source">{instr.source.toUpperCase()}</span>
+        <span className="muted small">{next ? "next" : "current"}</span>
       </div>
-      <p className="mono enc-source">{instr.source.toUpperCase()}</p>
-      <p className="muted small mono">{instr.form}</p>
       <div className="byte-chips">
         {instr.bytes.map((b, i) => (
           <span key={i} className="byte-chip mono">
             {hex(b, 2)}
           </span>
         ))}
-        <span className="muted small">
-          {instr.bytes.length} byte{instr.bytes.length > 1 ? "s" : ""} at {hex(instr.addr)}h
+        <span className="muted small mono enc-form" title={instr.form}>
+          {instr.form}
         </span>
       </div>
       <div className="bitrows">
@@ -52,26 +47,32 @@ export function Encoding({ instr, next }: { instr?: Instr; next: boolean }) {
           <div key={i} className="bitrow">
             <span className="mono muted small byte-index">{hex(instr.bytes[i], 2)}</span>
             <div className="bitfields">
-              {row.map((f, k) => (
-                <div key={k} className={`bitfield k-${f.kind}`} style={{ flexGrow: f.bits.length }} title={f.note}>
-                  <span className="mono bits">{f.bits}</span>
-                  <span className="field-label">{f.label}</span>
-                </div>
+              {row.map(({ field, index }) => (
+                <button
+                  type="button"
+                  key={index}
+                  className={`bitfield k-${field.kind} ${index === focus ? "focus" : ""}`}
+                  style={{ flexGrow: field.bits.length }}
+                  onMouseEnter={() => setFocus(index)}
+                  onFocus={() => setFocus(index)}
+                  onClick={() => setFocus(index)}
+                  aria-label={`${field.label}: ${field.note}`}
+                >
+                  <span className="mono bits">{field.bits}</span>
+                  <span className="field-label">{field.label}</span>
+                </button>
               ))}
             </div>
           </div>
         ))}
       </div>
-      <ul className="notes">
-        {instr.fields.map((f, i) => (
-          <li key={i}>
-            <span className={`swatch k-${f.kind}`} aria-label={KIND_NAME[f.kind]} />
-            <span className="mono note-label">{f.label}</span>
-            <span>{f.note}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
+      <p className="field-note">
+        <span className={`swatch k-${f.kind}`} aria-label={KIND_NAME[f.kind]} />
+        <span className="mono note-label">{f.label}</span>
+        <span>{f.note}</span>
+      </p>
+      <p className="muted small hint">Hover a field to see what it encodes.</p>
+    </div>
   );
 }
 
@@ -120,11 +121,7 @@ type MemProps = {
 export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }: MemProps) {
   const stackBase = Math.max(0, Math.min(0xfff0, ((regs.SP - 6) & 0xfff8) >>> 0));
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <h2>Memory</h2>
-        <span className="muted small">little-endian: low byte first</span>
-      </div>
+    <div className="mem">
       <div className="mem-head">
         <h3>
           Data <span className="mono muted">DS = {hex(regs.DS)}</span>
@@ -143,7 +140,8 @@ export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }
         Stack <span className="mono muted">SS = {hex(regs.SS)}, SP = {hex(regs.SP)}</span>
       </h3>
       <HexGrid seg={regs.SS} base={stackBase} count={16} peek={peek} written={written} read={read} marker={regs.SP} />
-    </section>
+      <p className="muted small hint">Low byte first. Hover a byte for its address.</p>
+    </div>
   );
 }
 

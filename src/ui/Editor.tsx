@@ -30,7 +30,7 @@ export function Editor({ value, onChange, program, currentLine }: Props) {
 
   return (
     <div className="editor-block">
-      <div className="editor" style={{ height: LINE * 18 + PAD * 2 }}>
+      <div className="editor">
         <div className="gutter" aria-hidden>
           <div style={{ transform: `translateY(${PAD - scroll}px)` }}>
             {lines.map((_, i) => {
