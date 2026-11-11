@@ -3,6 +3,30 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { hex } from "../cpu/assembler.ts";
 import { FLAG_NAMES, REG16, SREG } from "../cpu/types.ts";
 import type { Field, Flags, Instr, Regs } from "../cpu/types.ts";
+import type { View } from "../sim/session.ts";
+
+/** Encoding and Memory share one panel with tabs. */
+export function InfoTabs({ view, dataBase, setDataBase }: { view: View; dataBase: number; setDataBase: (v: number) => void }) {
+  const [tab, setTab] = useState<"enc" | "mem">("enc");
+  return (
+    <section className="panel info-panel">
+      <div className="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === "enc"} className={`tab ${tab === "enc" ? "on" : ""}`} onClick={() => setTab("enc")}>
+          Encoding
+        </button>
+        <button type="button" role="tab" aria-selected={tab === "mem"} className={`tab ${tab === "mem" ? "on" : ""}`} onClick={() => setTab("mem")}>
+          Memory
+        </button>
+      </div>
+      {tab === "enc" ? (
+        // Keyed by address so the hovered field resets for each instruction.
+        <Encoding key={view.encoding?.addr ?? -1} instr={view.encoding} next={view.encodingIsNext} />
+      ) : (
+        <MemoryPanel regs={view.regs} peek={view.peek} written={view.written} read={view.read} dataBase={dataBase} setDataBase={setDataBase} />
+      )}
+    </section>
+  );
+}
 
 const KIND_NAME: Record<Field["kind"], string> = {
   opcode: "opcode",
@@ -14,7 +38,7 @@ const KIND_NAME: Record<Field["kind"], string> = {
   data: "immediate",
 };
 
-export function Encoding({ instr, next }: { instr?: Instr; next: boolean }) {
+function Encoding({ instr, next }: { instr?: Instr; next: boolean }) {
   const [focus, setFocus] = useState(0);
   if (!instr) return <p className="muted">No instruction at IP.</p>;
   // Group fields into bytes.
@@ -117,7 +141,7 @@ type MemProps = {
   setDataBase: (v: number) => void;
 };
 
-export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }: MemProps) {
+function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }: MemProps) {
   // Show a 16-byte window that contains SP, a little above it when there is room.
   const stackBase = regs.SP < 6 ? 0 : Math.min(0xfff0, (regs.SP - 6) & 0xfff8);
   const [pick, setPick] = useState<Pick | null>(null);

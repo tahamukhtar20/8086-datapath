@@ -158,6 +158,7 @@ p {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+  height: 36px;
 }
 .panel-head span {
   white-space: nowrap;
