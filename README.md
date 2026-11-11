@@ -51,3 +51,7 @@ Static site on Cloudflare Workers:
 npm run build
 npx wrangler deploy
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE).
