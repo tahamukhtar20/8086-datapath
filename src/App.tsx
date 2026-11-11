@@ -189,7 +189,6 @@ export default function App() {
       <header className="top-bar">
         <div className="title">
           <h1>8086 Datapath</h1>
-          <p className="muted">Write 8086 assembly, step through it, and watch each instruction cross the chip.</p>
         </div>
         <div className="top-actions">
           <button type="button" className="source-link" onClick={() => setRefOpen(true)}>

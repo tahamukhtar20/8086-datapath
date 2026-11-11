@@ -1,6 +1,6 @@
 # 8086 Datapath
 
-An 8086 assembler and step-by-step visualizer. Write a short program, see the machine code for every line, and step through each instruction as it moves through the processor, drawn as the silicon die with memory off the chip.
+An 8086 assembler and simulator. It shows the machine code for each line and runs programs phase by phase on a drawing of the CPU die, with memory off the chip.
 
 Live at [8086.tahamukhtar.com](https://8086.tahamukhtar.com).
 
