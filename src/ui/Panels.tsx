@@ -71,7 +71,6 @@ export function Encoding({ instr, next }: { instr?: Instr; next: boolean }) {
         <span className="mono note-label">{f.label}</span>
         <span>{f.note}</span>
       </p>
-      <p className="muted small hint">Hover a field to see what it encodes.</p>
     </div>
   );
 }
