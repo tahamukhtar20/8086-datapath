@@ -650,6 +650,60 @@ p {
   caret-color: var(--gold);
   tab-size: 4;
 }
+.listing {
+  height: 416px;
+  overflow: auto;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: #0b0e13;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px 0;
+  cursor: text;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+.listing:focus-visible {
+  outline: 2px solid var(--gold);
+}
+.listing-line {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 128px;
+  height: 22px;
+  line-height: 22px;
+  white-space: pre;
+}
+.listing-line > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.l-addr {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+  padding-right: 8px;
+}
+.l-code {
+  padding-left: 12px;
+}
+.l-bytes {
+  color: var(--muted);
+  font-size: 12px;
+  padding-left: 8px;
+}
+.listing-line.current {
+  background: rgba(255, 209, 102, 0.12);
+  box-shadow: inset 2px 0 0 var(--gold);
+}
+.listing-line.current .l-addr,
+.listing-line.current .l-bytes {
+  color: var(--gold);
+}
+.small-btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  margin-left: auto;
+}
 .errors {
   list-style: none;
   margin: 8px 0 0;
@@ -1018,6 +1072,49 @@ p {
   border-color: var(--gold);
 }
 
+/* ---------- edit / run morph ---------- */
+.board-panel {
+  view-transition-name: board;
+}
+.editor-panel {
+  view-transition-name: program;
+}
+.info-panel {
+  view-transition-name: info;
+}
+::view-transition-group(*) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Panels hold the same content before and after, so show only the live view resizing. */
+::view-transition-old(board),
+::view-transition-old(program),
+::view-transition-old(info) {
+  display: none;
+}
+::view-transition-new(board),
+::view-transition-new(program),
+::view-transition-new(info) {
+  animation: none;
+}
+::view-transition-new(board) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+::view-transition-new(program),
+::view-transition-new(info) {
+  height: 100%;
+  width: 100%;
+  object-fit: none;
+  object-position: left top;
+  overflow: clip;
+}
+::view-transition-image-pair(program),
+::view-transition-image-pair(info) {
+  overflow: clip;
+}
+
 /* ---------- responsive ---------- */
 /* Desktop: everything fits in one screen. */
 @media (min-width: 1100px) and (min-height: 640px) {
@@ -1095,10 +1192,17 @@ p {
     flex-direction: column;
     margin-bottom: 0;
   }
-  .editor {
+  .layout.edit {
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+  }
+  .editor,
+  .listing {
     flex: 1;
     min-height: 120px;
     height: auto;
+  }
+  .editor,
+  .listing-line {
     grid-template-columns: 48px minmax(0, 1fr) 112px;
   }
   .bytes {

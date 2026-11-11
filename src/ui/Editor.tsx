@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { hex } from "../cpu/assembler.ts";
 import type { Program } from "../cpu/types.ts";
@@ -84,6 +84,32 @@ export function Editor({ value, onChange, program, currentLine }: Props) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** Read-only program view used while running: follows the current line. */
+export function Listing({ source, program, currentLine, onEdit }: { source: string; program: Program; currentLine: number | null; onEdit: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = box.current?.querySelector<HTMLElement>(".listing-line.current");
+    const parent = box.current;
+    if (!el || !parent) return;
+    const top = el.offsetTop - parent.clientHeight / 2 + LINE / 2;
+    parent.scrollTo({ top, behavior: "smooth" });
+  }, [currentLine]);
+  return (
+    <div ref={box} className="listing" role="button" tabIndex={0} onClick={onEdit} onKeyDown={(e) => e.key === "Enter" && onEdit()} aria-label="Program listing, click to edit">
+      {source.split("\n").map((text, i) => {
+        const ins = program.byLine[i];
+        return (
+          <div key={i} className={`listing-line ${i === currentLine ? "current" : ""}`}>
+            <span className="l-addr">{ins ? hex(ins.addr) : ""}</span>
+            <span className="l-code">{text || " "}</span>
+            <span className="l-bytes">{ins ? ins.bytes.map((b) => hex(b, 2)).join(" ") : ""}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
