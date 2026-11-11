@@ -11,7 +11,7 @@ import { Reference } from "./ui/Reference.tsx";
 import { useMode } from "./ui/useMode.ts";
 import { useShortcuts } from "./ui/useShortcuts.ts";
 
-const REPO = "https://github.com/tahamukhtar20/8086-Master-COAL";
+const REPO = "https://github.com/tahamukhtar20/8086-datapath";
 
 export default function App() {
   const [source, setSource] = useState(EXAMPLES[0].code);
