@@ -15,7 +15,7 @@ import type {
 export const ORIGIN = 0x0100;
 
 export const ALU_OPS: Record<string, number> = { ADD: 0, OR: 1, ADC: 2, SBB: 3, AND: 4, SUB: 5, XOR: 6, CMP: 7 };
-export const UNARY_OPS: Record<string, number> = { NOT: 2, NEG: 3, MUL: 4, IMUL: 5, DIV: 6, IDIV: 7 };
+const UNARY_OPS: Record<string, number> = { NOT: 2, NEG: 3, MUL: 4, IMUL: 5, DIV: 6, IDIV: 7 };
 export const JCC: Record<string, number> = {
   JO: 0x70, JNO: 0x71, JB: 0x72, JC: 0x72, JNAE: 0x72, JAE: 0x73, JNB: 0x73, JNC: 0x73,
   JE: 0x74, JZ: 0x74, JNE: 0x75, JNZ: 0x75, JBE: 0x76, JNA: 0x76, JA: 0x77, JNBE: 0x77,
@@ -29,12 +29,12 @@ const SINGLE: Record<string, [number, string]> = {
   HLT: [0xf4, "Halt the processor"],
 };
 
-export const MNEMONICS = [
+const MNEMONICS = [
   "MOV", ...Object.keys(ALU_OPS), "TEST", ...Object.keys(UNARY_OPS), "INC", "DEC",
   "PUSH", "POP", ...Object.keys(SINGLE), "JMP", "LOOP", ...Object.keys(JCC),
 ];
 
-export class AsmFault extends Error {}
+class AsmFault extends Error {}
 function fail(message: string): never {
   throw new AsmFault(message);
 }
@@ -43,7 +43,7 @@ export const hex = (v: number, digits = 4) => v.toString(16).toUpperCase().padSt
 const bin = (v: number, width: number) => v.toString(2).padStart(width, "0").slice(-width);
 const signed = (v: number, size: Size) => (v & (size === 8 ? 0x80 : 0x8000) ? v - (size === 8 ? 0x100 : 0x10000) : v);
 
-export function parseNumber(text: string): number | null {
+function parseNumber(text: string): number | null {
   let t = text.trim();
   let sign = 1;
   if (t.startsWith("-") || t.startsWith("+")) {
@@ -92,10 +92,10 @@ function parseMem(inner: string, size: Size | undefined): MemOperand {
   return m;
 }
 
-export function parseOperand(raw: string): Operand {
+function parseOperand(raw: string): Operand {
   let s = raw.trim();
   let size: Size | undefined;
-  const ptr = /^(byte|word)(\s+ptr)?\s*/i.exec(s);
+  const ptr = /^(byte|word)\b(\s+ptr\b)?\s*/i.exec(s);
   if (ptr) {
     size = ptr[1].toLowerCase() === "byte" ? 8 : 16;
     s = s.slice(ptr[0].length).trim();
@@ -260,7 +260,7 @@ function encodeJump(mn: string, ops: Operand[], ctx: Ctx): Encoded {
   return { bytes: e.bytes(), fields: e.fields, form: `${mn} rel8`, target };
 }
 
-export function encode(mn: string, ops: Operand[], ctx: Ctx): Encoded {
+function encode(mn: string, ops: Operand[], ctx: Ctx): Encoded {
   const e = new Enc();
   const done = (form: string, size?: Size): Encoded => ({ bytes: e.bytes(), fields: e.fields, form, size });
 
@@ -448,11 +448,37 @@ export function encode(mn: string, ops: Operand[], ctx: Ctx): Encoded {
   return fail(`Unknown instruction ${mn}`);
 }
 
+/** Drop a ; comment, but not a ';' character literal. */
+function stripComment(raw: string): string {
+  let quoted = false;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === "'") quoted = !quoted;
+    else if (raw[i] === ";" && !quoted) return raw.slice(0, i);
+  }
+  return raw;
+}
+
+/** Split operands on commas outside character literals, so ',' still works. */
+function splitOperands(text: string): string[] {
+  const out: string[] = [];
+  let quoted = false;
+  let start = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "'") quoted = !quoted;
+    else if (text[i] === "," && !quoted) {
+      out.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  out.push(text.slice(start));
+  return out;
+}
+
 type Stmt = { line: number; source: string; label?: string; mn?: string; ops?: Operand[]; error?: string };
 
 function parseLines(text: string): Stmt[] {
   return text.split("\n").map((raw, line) => {
-    const code = raw.replace(/;.*$/, "").trim();
+    const code = stripComment(raw).trim();
     const st: Stmt = { line, source: code };
     if (!code) return st;
     try {
@@ -470,7 +496,7 @@ function parseLines(text: string): Stmt[] {
       const mn = sp[1].toUpperCase();
       if (!MNEMONICS.includes(mn)) fail(`Unknown instruction ${sp[1]}`);
       st.mn = mn;
-      st.ops = sp[2].trim() ? sp[2].split(",").map(parseOperand) : [];
+      st.ops = sp[2].trim() ? splitOperands(sp[2]).map(parseOperand) : [];
     } catch (e) {
       if (!(e instanceof AsmFault)) throw e;
       st.error = e.message;

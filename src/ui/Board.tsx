@@ -96,7 +96,8 @@ export function Board({ regs, flags, phase, queue, cu, changed }: Props) {
     if (w.startsWith("~")) reversed.add(id);
   }
   const busActive = [...active].some((w) => BUS_WIRES.has(w));
-  const extActive = MEM_WIRES.some((w) => active.has(w));
+  // The pins and external bus only carry traffic in phases that actually use memory.
+  const extActive = !!phase?.bus && MEM_WIRES.some((w) => active.has(w));
   const extOut = reversed.has("mem_bus") || (active.has("sigma_mem") && !active.has("mem_bus") && !active.has("mem_queue"));
   const nodes = new Set(phase?.nodes ?? []);
   const role = (n: string): Role | undefined => phase?.roles[n];
@@ -353,7 +354,9 @@ export function Board({ regs, flags, phase, queue, cu, changed }: Props) {
           {cu ? (
             <>
               <text x="1030" y="390" className="value" textAnchor="middle">{cu.form}</text>
-              <text x="1030" y="418" className="value dim small-value" textAnchor="middle">{cu.source}</text>
+              <text x="1030" y="418" className="value dim small-value" textAnchor="middle">
+                {cu.source.length > 28 ? `${cu.source.slice(0, 27)}…` : cu.source}
+              </text>
             </>
           ) : (
             <text x="1030" y="400" className="silk dim" textAnchor="middle">waiting</text>

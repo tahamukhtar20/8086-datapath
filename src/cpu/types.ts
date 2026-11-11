@@ -55,7 +55,6 @@ export type Program = {
 
 export type Flags = { OF: boolean; SF: boolean; ZF: boolean; AF: boolean; PF: boolean; CF: boolean };
 export const FLAG_NAMES = ["OF", "SF", "ZF", "AF", "PF", "CF"] as const;
-export type FlagName = (typeof FLAG_NAMES)[number];
 
 export type Regs = Record<Reg16 | SReg | "IP", number> & { flags: Flags };
 

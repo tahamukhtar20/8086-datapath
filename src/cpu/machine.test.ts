@@ -101,3 +101,21 @@ test("undo restores registers and memory", () => {
   assert.equal(m.regs.IP, 0x100);
   assert.equal(m.mem[phys(0x2000, 0x200)], 0);
 });
+
+test("word access at offset FFFFh wraps within the segment", () => {
+  const { m } = run("MOV BX, 0FFFFh\nMOV WORD PTR [BX], 1234h\nMOV AX, [BX]\nHLT");
+  assert.equal(m.mem[phys(0x2000, 0xffff)], 0x34);
+  assert.equal(m.mem[phys(0x2000, 0x0000)], 0x12);
+  assert.equal(m.mem[phys(0x3000, 0x0000)], 0x00);
+  assert.equal(m.regs.AX, 0x1234);
+});
+
+test("PUSH SP pushes the decremented SP, as on the 8086", () => {
+  const { m } = run("MOV SP, 100h\nPUSH SP\nPOP AX\nHLT");
+  assert.equal(m.regs.AX, 0x00fe);
+});
+
+test("IDIV faults on a quotient of -128", () => {
+  const { steps } = run("MOV AX, 0FF80h\nMOV BL, 1\nIDIV BL\nHLT");
+  assert.ok(steps.at(-1)!.error, "expected a divide error");
+});

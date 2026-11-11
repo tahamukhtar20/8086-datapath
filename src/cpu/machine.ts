@@ -2,7 +2,6 @@ import { ALU_OPS, JCC, ORIGIN, hex, memText } from "./assembler.ts";
 import { FLAG_NAMES } from "./types.ts";
 import type {
   Flags,
-  Instr,
   MemOperand,
   MemWrite,
   Operand,
@@ -17,19 +16,19 @@ import type {
   WireRef,
 } from "./types.ts";
 
-export const INITIAL_SEGMENTS = { CS: 0x1000, DS: 0x2000, ES: 0x2000, SS: 0x3000 };
-export const INITIAL_SP = 0xfffe;
+const INITIAL_SEGMENTS = { CS: 0x1000, DS: 0x2000, ES: 0x2000, SS: 0x3000 };
+const INITIAL_SP = 0xfffe;
 
 export const h = (v: number, size: Size = 16) => `${hex(v, size === 8 ? 2 : 4)}h`;
-export const h5 = (v: number) => `${hex(v, 5)}h`;
+const h5 = (v: number) => `${hex(v, 5)}h`;
 const mask = (size: Size) => (size === 8 ? 0xff : 0xffff);
 const sign = (size: Size) => (size === 8 ? 0x80 : 0x8000);
 const toSigned = (v: number, size: Size) => (v & sign(size) ? v - (mask(size) + 1) : v);
 export const phys = (seg: number, off: number) => (seg * 16 + off) & 0xfffff;
 
-export const cloneRegs = (r: Regs): Regs => ({ ...r, flags: { ...r.flags } });
+const cloneRegs = (r: Regs): Regs => ({ ...r, flags: { ...r.flags } });
 
-export function initialRegs(): Regs {
+function initialRegs(): Regs {
   return {
     AX: 0, BX: 0, CX: 0, DX: 0, SP: INITIAL_SP, BP: 0, SI: 0, DI: 0,
     ...INITIAL_SEGMENTS,
@@ -101,7 +100,7 @@ const CONDITIONS: Record<number, [string, (f: Flags) => boolean]> = {
   0x7f: ["ZF = 0 and SF = OF", (f) => !f.ZF && f.SF === f.OF],
 };
 
-export function flagChanges(a: Flags, b: Flags) {
+function flagChanges(a: Flags, b: Flags) {
   return FLAG_NAMES.filter((n) => a[n] !== b[n]).map((n) => `${n} ${+a[n]}→${+b[n]}`);
 }
 
@@ -146,18 +145,23 @@ export function step(m: Machine, program: Program): StepResult | null {
       r[k] = name[1] === "L" ? (r[k] & 0xff00) | (v & 0xff) : (r[k] & 0xff) | ((v & 0xff) << 8);
     } else r[name as Reg16 | SReg] = v & 0xffff;
   };
-  const readMem = (p: number, size: Size) => {
-    reads.push(p);
-    if (size === 16) reads.push((p + 1) & 0xfffff);
-    return size === 8 ? m.mem[p] : m.mem[p] | (m.mem[(p + 1) & 0xfffff] << 8);
+  // The high byte of a word lives at offset + 1 in the same segment: at offset FFFFh it
+  // wraps to offset 0000h of that segment, not to the next physical address.
+  const highAddr = (ref: MemRef) => phys(ref.segVal, (ref.ea + 1) & 0xffff);
+  const readMem = (ref: MemRef, size: Size) => {
+    reads.push(ref.phys);
+    if (size === 8) return m.mem[ref.phys];
+    const hi = highAddr(ref);
+    reads.push(hi);
+    return m.mem[ref.phys] | (m.mem[hi] << 8);
   };
   const writeByte = (p: number, v: number) => {
     writes.push({ addr: p, old: m.mem[p], value: v & 0xff });
     m.mem[p] = v & 0xff;
   };
-  const writeMem = (p: number, v: number, size: Size) => {
-    writeByte(p, v);
-    if (size === 16) writeByte((p + 1) & 0xfffff, v >> 8);
+  const writeMem = (ref: MemRef, v: number, size: Size) => {
+    writeByte(ref.phys, v);
+    if (size === 16) writeByte(highAddr(ref), v >> 8);
   };
   const bytesOf = (v: number, size: Size) => (size === 8 ? [v & 0xff] : [v & 0xff, (v >> 8) & 0xff]);
   const bytesText = (b: number[]) => b.map((x) => hex(x, 2)).join(" ");
@@ -203,7 +207,7 @@ export function step(m: Machine, program: Program): StepResult | null {
     });
   };
   const readPhase = (ref: MemRef, size: Size) => {
-    const v = readMem(ref.phys, size);
+    const v = readMem(ref, size);
     push({
       kind: "read",
       title: "Read memory",
@@ -217,7 +221,7 @@ export function step(m: Machine, program: Program): StepResult | null {
     return v;
   };
   const writePhase = (ref: MemRef, v: number, size: Size, from: { nodes: string[]; wires: WireRef[]; roles?: Phase["roles"] }, text?: string) => {
-    writeMem(ref.phys, v, size);
+    writeMem(ref, v, size);
     push({
       kind: "write",
       title: "Write memory",
@@ -414,7 +418,8 @@ export function step(m: Machine, program: Program): StepResult | null {
           const d = signedOp ? toSigned(b, 8) : b;
           const q = Math.trunc(n / d);
           const rem = n - q * d;
-          if (signedOp ? q < -128 || q > 127 : q > 0xff)
+          // The 8086 faults on a signed quotient of -128 too; only later CPUs allow it.
+          if (signedOp ? q < -127 || q > 127 : q > 0xff)
             throw new CpuFault(`The quotient ${q} does not fit in AL. The 8086 raises interrupt 0 (divide error).`);
           r.AX = ((rem & 0xff) << 8) | (q & 0xff);
           expr = `${h(n & 0xffff)} ÷ ${h(b, 8)} = ${h(q & 0xff, 8)} r ${h(rem & 0xff, 8)}`;
@@ -425,7 +430,7 @@ export function step(m: Machine, program: Program): StepResult | null {
           const d = signedOp ? toSigned(b, 16) : b;
           const q = Math.trunc(n / d);
           const rem = n - q * d;
-          if (signedOp ? q < -32768 || q > 32767 : q > 0xffff)
+          if (signedOp ? q < -32767 || q > 32767 : q > 0xffff)
             throw new CpuFault(`The quotient ${q} does not fit in AX. The 8086 raises interrupt 0 (divide error).`);
           const dx = r.DX;
           const ax = r.AX;
@@ -466,8 +471,10 @@ export function step(m: Machine, program: Program): StepResult | null {
       });
     } else if (mn === "PUSH") {
       const [o] = ops;
-      const v = load(o, 16, "Source address");
+      let v = load(o, 16, "Source address");
       r.SP = (r.SP - 2) & 0xffff;
+      // The 8086 pushes SP after the decrement (the 80286 changed this to the old value).
+      if (o.kind === "reg" && o.name === "SP") v = r.SP;
       const ref = stackRef(r.SP);
       addressPhase(ref, `SP − 2 = ${h(r.SP)}, the new top of the stack`);
       writePhase(ref, v, 16, { nodes: [opNode(o)], wires: opWires(o), roles: { [opNode(o)]: "src", SP: "dst" } },
@@ -554,4 +561,3 @@ export function undo(m: Machine, s: StepResult) {
   for (let i = s.writes.length - 1; i >= 0; i--) m.mem[s.writes[i].addr] = s.writes[i].old;
 }
 
-export type { Instr };

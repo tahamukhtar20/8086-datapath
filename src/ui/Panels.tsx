@@ -42,7 +42,7 @@ export function Encoding({ instr, next }: { instr?: Instr; next: boolean }) {
           {instr.form}
         </span>
       </div>
-      <div className="bitrows">
+      <div className={`bitrows ${rows.length > 4 ? "two-col" : ""}`}>
         {rows.map((row, i) => (
           <div key={i} className="bitrow">
             <span className="mono muted small byte-index">{hex(instr.bytes[i], 2)}</span>
@@ -118,7 +118,8 @@ type MemProps = {
 };
 
 export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }: MemProps) {
-  const stackBase = Math.max(0, Math.min(0xfff0, ((regs.SP - 6) & 0xfff8) >>> 0));
+  // Show a 16-byte window that contains SP, a little above it when there is room.
+  const stackBase = regs.SP < 6 ? 0 : Math.min(0xfff0, (regs.SP - 6) & 0xfff8);
   const [pick, setPick] = useState<Pick | null>(null);
   const shown = pick && (pick.seg === "DS" ? regs.DS : regs.SS);
   const phys = pick && shown !== null ? (shown * 16 + pick.off) & 0xfffff : 0;
@@ -149,10 +150,9 @@ export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }
             <span className="muted">holds</span> {hex(peek(phys), 2)}h ({peek(phys)})
           </>
         ) : (
-          <span className="muted">Hover or tap a byte for its address.</span>
+          <span className="muted">Hover a byte for its address. Words are stored low byte first.</span>
         )}
       </p>
-      <p className="muted small hint">Words are stored low byte first.</p>
     </div>
   );
 }

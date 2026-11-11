@@ -23,14 +23,35 @@ export function Editor({ value, onChange, program, currentLine, readOnly = false
   const lines = value.split("\n");
   const errorLines = new Map(program.errors.map((e) => [e.line, e.message]));
 
+  // While running, keep the current line centred, including when the editor resizes
+  // (the run/edit morph changes its height, and so does the window).
   useEffect(() => {
     const t = area.current;
     if (!readOnly || !t || currentLine === null) return;
-    const top = PAD + currentLine * LINE - t.clientHeight / 2 + LINE / 2;
-    t.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    const centre = (behavior: ScrollBehavior) => {
+      const top = PAD + currentLine * LINE - t.clientHeight / 2 + LINE / 2;
+      t.scrollTo({ top: Math.max(0, top), behavior });
+    };
+    centre("smooth");
+    const ro = new ResizeObserver(() => centre("auto"));
+    ro.observe(t);
+    return () => ro.disconnect();
   }, [readOnly, currentLine]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (readOnly) {
+      // Read-only while running: Enter or E starts editing, Tab moves focus on as usual.
+      if (e.key === "Enter" || e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        onActivate?.();
+      }
+      return;
+    }
+    // Escape lets keyboard users leave the editor, since Tab inserts spaces here.
+    if (e.key === "Escape") {
+      e.currentTarget.blur();
+      return;
+    }
     if (e.key !== "Tab" || e.shiftKey) return;
     e.preventDefault();
     const t = e.currentTarget;
@@ -65,7 +86,12 @@ export function Editor({ value, onChange, program, currentLine, readOnly = false
             onScroll={(e) => setScroll(e.currentTarget.scrollTop)}
             onKeyDown={onKeyDown}
             readOnly={readOnly}
-            onMouseDown={() => readOnly && onActivate?.()}
+            onMouseDown={(e) => {
+              // Ignore presses on the scrollbars, so scrolling the code doesn't leave run mode.
+              const t = e.currentTarget;
+              const { offsetX, offsetY } = e.nativeEvent;
+              if (readOnly && offsetX <= t.clientWidth && offsetY <= t.clientHeight) onActivate?.();
+            }}
             spellCheck={false}
             autoCapitalize="off"
             autoComplete="off"

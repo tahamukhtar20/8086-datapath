@@ -29,6 +29,7 @@ export function Reference({ open, onClose }: { open: boolean; onClose: () => voi
   }, [open]);
   return (
     <dialog ref={ref} className="ref-dialog" onClose={onClose} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="ref-body">
       <div className="ref-head">
         <h2>Reference</h2>
         <button type="button" className="icon-btn" aria-label="Close reference" onClick={onClose}>
@@ -85,6 +86,7 @@ export function Reference({ open, onClose }: { open: boolean; onClose: () => voi
       <p className="muted small ref-foot">
         Built by <a href="https://github.com/tahamukhtar20">@tahamukhtar20</a>
       </p>
+      </div>
     </dialog>
   );
 }

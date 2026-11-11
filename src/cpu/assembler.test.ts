@@ -104,3 +104,13 @@ test("errors", () => {
   assert.match(msg("jmp nowhere"), /Unknown label/);
   assert.match(msg("frob ax"), /Unknown instruction/);
 });
+
+test("labels may start with byte or word", () => {
+  const p = assemble("JMP wordy\nwordy: HLT\nbytes: JMP bytes");
+  assert.deepEqual(p.errors, []);
+});
+
+test("',' and ';' work as character literals", () => {
+  assert.equal(bytes("MOV AL, ','"), "B0 2C");
+  assert.equal(bytes("MOV AL, ';' ; a comment"), "B0 3B");
+});

@@ -28,7 +28,9 @@ export default function App() {
   const [source, setSource] = useState(EXAMPLES[0].code);
   const [exampleId, setExampleId] = useState(EXAMPLES[0].id);
   const program = useMemo(() => assemble(source), [source]);
-  const sim = useRef<Sim>(newSim(program));
+  // Lazy init: newSim allocates 1 MB of memory, so don't build one on every render.
+  const sim = useRef<Sim>(null as unknown as Sim);
+  if (!sim.current) sim.current = newSim(program);
   const [, render] = useReducer((x: number) => x + 1, 0);
   const [running, setRunning] = useState(false);
   const [showPhases, setShowPhases] = useState(true);
@@ -52,6 +54,8 @@ export default function App() {
   }, []);
   const phasesRef = useRef(showPhases);
   phasesRef.current = showPhases;
+  const refOpenRef = useRef(refOpen);
+  refOpenRef.current = refOpen;
 
   const reset = useCallback(() => {
     sim.current = newSim(program);
@@ -64,10 +68,10 @@ export default function App() {
   const forward = useCallback((): boolean => {
     const s = sim.current;
     if (program.errors.length) return false;
-    setMode("run");
     const cur = s.history.at(-1);
     if (cur && phasesRef.current && s.phase < cur.phases.length - 1) {
       s.phase++;
+      setMode("run");
       render();
       return true;
     }
@@ -84,6 +88,7 @@ export default function App() {
       const off = touched - ds;
       setDataBase((b) => (off >= b && off < b + 32 ? b : off & 0xffe0));
     }
+    setMode("run");
     render();
     return true;
   }, [program, setMode]);
@@ -113,7 +118,8 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof Element && e.target.closest("textarea, input, select")) return;
+      if (refOpenRef.current || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.target instanceof Element && e.target.closest('textarea, select, input:not([type="checkbox"]), dialog')) return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         setRunning(false);
@@ -122,7 +128,7 @@ export default function App() {
         e.preventDefault();
         setRunning(false);
         back();
-      } else if ((e.key === "e" || e.key === "E") && !e.ctrlKey && !e.metaKey && !e.altKey && modeRef.current === "run") {
+      } else if ((e.key === "e" || e.key === "E") && modeRef.current === "run") {
         e.preventDefault();
         setRunning(false);
         setMode("edit");
@@ -188,6 +194,7 @@ export default function App() {
 
   let status: string;
   if (hasErrors) status = "Fix the errors in the program to run it.";
+  else if (!cur && s.count > 0) status = `Only the last ${MAX_HISTORY.toLocaleString()} instructions are kept for stepping back. Step forward or reset.`;
   else if (!cur) status = `Press Step to fetch the first instruction at CS:IP = ${hex(regs.CS)}:${hex(regs.IP)}.`;
   else status = phase!.text;
   let endNote = "";
@@ -207,9 +214,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="top-bar">
-        <div className="title">
-          <h1>8086 Datapath</h1>
-        </div>
+        <h1>8086 Datapath</h1>
         <div className="top-actions">
           <button type="button" className="source-link" onClick={() => setRefOpen(true)}>
             <BookOpen size={18} />
@@ -235,11 +240,11 @@ export default function App() {
                 <StepForward size={18} />
                 <span>Step</span>
               </button>
-              <button type="button" className="btn" onClick={() => setRunning((r) => !r)} disabled={!canForward && !running}>
+              <button type="button" className="btn" onClick={() => setRunning((r) => !r)} disabled={!canForward && !running} aria-label={running ? "Pause" : "Run"}>
                 {running ? <Pause size={18} /> : <Play size={18} />}
                 <span>{running ? "Pause" : "Run"}</span>
               </button>
-              <button type="button" className="btn" onClick={reset} disabled={!cur} aria-label="Reset">
+              <button type="button" className="btn" onClick={reset} disabled={!cur && s.count === 0} aria-label="Reset">
                 <RotateCcw size={18} />
                 <span>Reset</span>
               </button>
@@ -249,7 +254,7 @@ export default function App() {
                 <input type="checkbox" checked={showPhases} onChange={(e) => togglePhases(e.target.checked)} />
                 <span>Every phase</span>
               </label>
-              <select className="select" value={speed} onChange={(e) => setSpeed(+e.target.value)} aria-label="Run speed">
+              <select className="select" value={speed} onChange={(e) => (setSpeed(+e.target.value), e.currentTarget.blur())} aria-label="Run speed">
                 {SPEEDS.map((sp) => (
                   <option key={sp.ms} value={sp.ms}>
                     {sp.label}
@@ -297,12 +302,12 @@ export default function App() {
           <div className="panel-head">
             <h2>Program</h2>
             {mode === "run" && (
-              <button type="button" className="btn small-btn" onClick={() => (setRunning(false), setMode("edit"))}>
+              <button type="button" className="btn small-btn" onClick={() => (setRunning(false), setMode("edit"))} aria-label="Edit program">
                 <Pencil size={15} />
                 <span>Edit</span>
               </button>
             )}
-            <select className="select" value={exampleId} onChange={(e) => loadExample(e.target.value)} aria-label="Example program">
+            <select className="select" value={exampleId} onChange={(e) => (loadExample(e.target.value), e.currentTarget.blur())} aria-label="Example program">
               {EXAMPLES.map((ex) => (
                 <option key={ex.id} value={ex.id}>
                   {ex.title}
