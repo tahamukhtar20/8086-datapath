@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { BookOpen, CodeXml, Pause, Pencil, Play, RotateCcw, StepBack, StepForward } from "lucide-react";
 import { assemble, hex, JCC } from "./cpu/assembler.ts";
 import { EXAMPLES } from "./cpu/examples.ts";
@@ -7,7 +6,7 @@ import { Machine, step, undo } from "./cpu/machine.ts";
 import { FLAG_NAMES, REG16, SREG } from "./cpu/types.ts";
 import type { Program, Regs, StepResult } from "./cpu/types.ts";
 import { Board } from "./ui/Board.tsx";
-import { Editor, Listing } from "./ui/Editor.tsx";
+import { Editor } from "./ui/Editor.tsx";
 import { Encoding, MemoryPanel, StatePanel } from "./ui/Panels.tsx";
 import { Reference } from "./ui/Reference.tsx";
 
@@ -22,16 +21,6 @@ const SPEEDS = [
 ];
 
 type Mode = "edit" | "run";
-type ViewTransitionDoc = Document & { startViewTransition?: (cb: () => void) => unknown };
-
-/** Switch layouts with a View Transition where the browser supports it. */
-function morph(apply: () => void) {
-  const doc = document as ViewTransitionDoc;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (!doc.startViewTransition || reduce) return apply();
-  doc.startViewTransition(() => flushSync(apply));
-}
-
 type Sim = { machine: Machine; history: StepResult[]; phase: number; count: number };
 const newSim = (p: Program): Sim => ({ machine: new Machine(p), history: [], phase: 0, count: 0 });
 
@@ -48,12 +37,18 @@ export default function App() {
   const [tab, setTab] = useState<"enc" | "mem">("enc");
   const [refOpen, setRefOpen] = useState(false);
   const [mode, setModeState] = useState<Mode>("edit");
+  const [morphing, setMorphing] = useState(false);
+  const morphTimer = useRef<number>();
   const modeRef = useRef(mode);
   modeRef.current = mode;
   const setMode = useCallback((m: Mode) => {
     if (modeRef.current === m) return;
     modeRef.current = m;
-    morph(() => setModeState(m));
+    setModeState(m);
+    // Drop the SVG glows while the columns resize so each frame paints cheaply.
+    setMorphing(true);
+    window.clearTimeout(morphTimer.current);
+    morphTimer.current = window.setTimeout(() => setMorphing(false), 560);
   }, []);
   const phasesRef = useRef(showPhases);
   phasesRef.current = showPhases;
@@ -227,7 +222,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className={`layout ${mode}`}>
+      <main className={`layout ${mode} ${morphing ? "morphing" : ""}`}>
         <div className="col col-right">
         <section className="panel board-panel">
           <div className="toolbar">
@@ -315,11 +310,14 @@ export default function App() {
               ))}
             </select>
           </div>
-          {mode === "edit" ? (
-            <Editor value={source} onChange={setSource} program={program} currentLine={currentLine} />
-          ) : (
-            <Listing source={source} program={program} currentLine={currentLine} onEdit={() => (setRunning(false), setMode("edit"))} />
-          )}
+          <Editor
+            value={source}
+            onChange={setSource}
+            program={program}
+            currentLine={currentLine}
+            readOnly={mode === "run"}
+            onActivate={() => (setRunning(false), setMode("edit"))}
+          />
           <p className="muted small hint">
             {mode === "edit" ? (
               <>

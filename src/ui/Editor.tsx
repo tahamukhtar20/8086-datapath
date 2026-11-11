@@ -11,13 +11,24 @@ type Props = {
   onChange: (v: string) => void;
   program: Program;
   currentLine: number | null;
+  /** While running the code is read-only and follows the current line. */
+  readOnly?: boolean;
+  /** Called when the user clicks into read-only code to edit it. */
+  onActivate?: () => void;
 };
 
-export function Editor({ value, onChange, program, currentLine }: Props) {
+export function Editor({ value, onChange, program, currentLine, readOnly = false, onActivate }: Props) {
   const [scroll, setScroll] = useState(0);
   const area = useRef<HTMLTextAreaElement>(null);
   const lines = value.split("\n");
   const errorLines = new Map(program.errors.map((e) => [e.line, e.message]));
+
+  useEffect(() => {
+    const t = area.current;
+    if (!readOnly || !t || currentLine === null) return;
+    const top = PAD + currentLine * LINE - t.clientHeight / 2 + LINE / 2;
+    t.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, [readOnly, currentLine]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== "Tab" || e.shiftKey) return;
@@ -30,7 +41,7 @@ export function Editor({ value, onChange, program, currentLine }: Props) {
 
   return (
     <div className="editor-block">
-      <div className="editor">
+      <div className={`editor ${readOnly ? "readonly" : ""}`}>
         <div className="gutter" aria-hidden>
           <div style={{ transform: `translateY(${PAD - scroll}px)` }}>
             {lines.map((_, i) => {
@@ -53,6 +64,8 @@ export function Editor({ value, onChange, program, currentLine }: Props) {
             onChange={(e) => onChange(e.target.value)}
             onScroll={(e) => setScroll(e.currentTarget.scrollTop)}
             onKeyDown={onKeyDown}
+            readOnly={readOnly}
+            onMouseDown={() => readOnly && onActivate?.()}
             spellCheck={false}
             autoCapitalize="off"
             autoComplete="off"
@@ -84,32 +97,6 @@ export function Editor({ value, onChange, program, currentLine }: Props) {
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-/** Read-only program view used while running: follows the current line. */
-export function Listing({ source, program, currentLine, onEdit }: { source: string; program: Program; currentLine: number | null; onEdit: () => void }) {
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = box.current?.querySelector<HTMLElement>(".listing-line.current");
-    const parent = box.current;
-    if (!el || !parent) return;
-    const top = el.offsetTop - parent.clientHeight / 2 + LINE / 2;
-    parent.scrollTo({ top, behavior: "smooth" });
-  }, [currentLine]);
-  return (
-    <div ref={box} className="listing" role="button" tabIndex={0} onClick={onEdit} onKeyDown={(e) => e.key === "Enter" && onEdit()} aria-label="Program listing, click to edit">
-      {source.split("\n").map((text, i) => {
-        const ins = program.byLine[i];
-        return (
-          <div key={i} className={`listing-line ${i === currentLine ? "current" : ""}`}>
-            <span className="l-addr">{ins ? hex(ins.addr) : ""}</span>
-            <span className="l-code">{text || " "}</span>
-            <span className="l-bytes">{ins ? ins.bytes.map((b) => hex(b, 2)).join(" ") : ""}</span>
-          </div>
-        );
-      })}
     </div>
   );
 }
