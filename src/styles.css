@@ -1141,8 +1141,42 @@ p {
     overflow: auto;
     flex-shrink: 0;
   }
-  .info-panel {
+  .col-left {
+    gap: 0;
+  }
+  /* Encoding and Memory rise from the bottom once the program runs. */
+  .info-wrap {
     flex-shrink: 0;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 520ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .layout.run .info-wrap {
+    grid-template-rows: 1fr;
+  }
+  .info-inner {
+    min-height: 0;
+    overflow: hidden;
+    padding-top: 12px;
+  }
+  .info-panel {
+    transform: translateY(40px);
+    opacity: 0;
+    transition:
+      transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 300ms ease;
+  }
+  .layout.run .info-panel {
+    transform: none;
+    opacity: 1;
+    transition-delay: 140ms;
+  }
+  .layout.edit .info-panel {
+    visibility: hidden;
+    transition:
+      transform 300ms ease,
+      opacity 200ms ease,
+      visibility 0s 520ms;
   }
 }
 @media (max-width: 1100px) {
@@ -1162,7 +1196,8 @@ p {
     display: block;
     order: 3;
   }
-  .layout > .col > .panel:not(.board-panel):not(.editor-panel):not(.state-panel) {
+  .layout > .col > .panel:not(.board-panel):not(.editor-panel):not(.state-panel),
+  .info-wrap {
     order: 4;
   }
   .reference {
@@ -1215,7 +1250,9 @@ p {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .layout {
+  .layout,
+  .info-wrap,
+  .info-panel {
     transition: none !important;
   }
   .board .trace.flow,

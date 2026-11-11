@@ -329,21 +329,25 @@ export default function App() {
           </p>
         </section>
 
-        <section className="panel info-panel">
-          <div className="tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={tab === "enc"} className={`tab ${tab === "enc" ? "on" : ""}`} onClick={() => setTab("enc")}>
-              Encoding
-            </button>
-            <button type="button" role="tab" aria-selected={tab === "mem"} className={`tab ${tab === "mem" ? "on" : ""}`} onClick={() => setTab("mem")}>
-              Memory
-            </button>
+        <div className="info-wrap">
+          <div className="info-inner">
+            <section className="panel info-panel">
+              <div className="tabs" role="tablist">
+                <button type="button" role="tab" aria-selected={tab === "enc"} className={`tab ${tab === "enc" ? "on" : ""}`} onClick={() => setTab("enc")}>
+                  Encoding
+                </button>
+                <button type="button" role="tab" aria-selected={tab === "mem"} className={`tab ${tab === "mem" ? "on" : ""}`} onClick={() => setTab("mem")}>
+                  Memory
+                </button>
+              </div>
+              {tab === "enc" ? (
+                <Encoding key={encInstr?.addr ?? -1} instr={encInstr} next={!!encInstr && encInstr !== cur?.instr} />
+              ) : (
+                <MemoryPanel regs={regs} peek={peek} written={written} read={read} dataBase={dataBase} setDataBase={setDataBase} />
+              )}
+            </section>
           </div>
-          {tab === "enc" ? (
-            <Encoding key={encInstr?.addr ?? -1} instr={encInstr} next={!!encInstr && encInstr !== cur?.instr} />
-          ) : (
-            <MemoryPanel regs={regs} peek={peek} written={written} read={read} dataBase={dataBase} setDataBase={setDataBase} />
-          )}
-        </section>
+        </div>
         </div>
       </main>
 
