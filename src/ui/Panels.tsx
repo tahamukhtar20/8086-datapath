@@ -120,6 +120,9 @@ type MemProps = {
 
 export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }: MemProps) {
   const stackBase = Math.max(0, Math.min(0xfff0, ((regs.SP - 6) & 0xfff8) >>> 0));
+  const [pick, setPick] = useState<Pick | null>(null);
+  const shown = pick && (pick.seg === "DS" ? regs.DS : regs.SS);
+  const phys = pick && shown !== null ? (shown * 16 + pick.off) & 0xfffff : 0;
   return (
     <div className="mem">
       <div className="mem-head">
@@ -135,18 +138,31 @@ export function MemoryPanel({ regs, peek, written, read, dataBase, setDataBase }
           </button>
         </div>
       </div>
-      <HexGrid seg={regs.DS} base={dataBase} count={32} peek={peek} written={written} read={read} />
+      <HexGrid name="DS" seg={regs.DS} base={dataBase} count={32} peek={peek} written={written} read={read} pick={pick} onPick={setPick} />
       <h3>
         Stack <span className="mono muted">SS = {hex(regs.SS)}, SP = {hex(regs.SP)}</span>
       </h3>
-      <HexGrid seg={regs.SS} base={stackBase} count={16} peek={peek} written={written} read={read} marker={regs.SP} />
-      <p className="muted small hint">Low byte first. Hover a byte for its address.</p>
+      <HexGrid name="SS" seg={regs.SS} base={stackBase} count={16} peek={peek} written={written} read={read} marker={regs.SP} pick={pick} onPick={setPick} />
+      <p className="byte-note mono" aria-live="polite">
+        {pick && shown !== null ? (
+          <>
+            {pick.seg}:{hex(pick.off)} <span className="muted">=</span> {hex(shown)}:{hex(pick.off)} <span className="muted">→</span> {hex(phys, 5)}h{" "}
+            <span className="muted">holds</span> {hex(peek(phys), 2)}h ({peek(phys)})
+          </>
+        ) : (
+          <span className="muted">Hover or tap a byte for its address.</span>
+        )}
+      </p>
+      <p className="muted small hint">Words are stored low byte first.</p>
     </div>
   );
 }
 
-function HexGrid({ seg, base, count, peek, written, read, marker }: {
-  seg: number; base: number; count: number; peek: (p: number) => number; written: Set<number>; read: Set<number>; marker?: number;
+type Pick = { seg: "DS" | "SS"; off: number };
+
+function HexGrid({ name, seg, base, count, peek, written, read, marker, pick, onPick }: {
+  name: Pick["seg"]; seg: number; base: number; count: number; peek: (p: number) => number; written: Set<number>; read: Set<number>; marker?: number;
+  pick: Pick | null; onPick: (p: Pick) => void;
 }) {
   const rows = [];
   for (let off = base; off < base + count; off += 8) {
@@ -156,11 +172,13 @@ function HexGrid({ seg, base, count, peek, written, read, marker }: {
         {Array.from({ length: 8 }, (_, k) => {
           const o = (off + k) & 0xffff;
           const p = (seg * 16 + o) & 0xfffff;
-          const c = ["hex-cell", "mono", written.has(p) && "w", read.has(p) && "r", marker === o && "sp"].filter(Boolean).join(" ");
+          const picked = pick?.seg === name && pick.off === o;
+          const c = ["hex-cell", "mono", written.has(p) && "w", read.has(p) && "r", marker === o && "sp", picked && "picked"].filter(Boolean).join(" ");
+          const select = () => onPick({ seg: name, off: o });
           return (
-            <span key={k} className={c} title={`${hex(seg)}:${hex(o)} = ${hex(p, 5)}h`}>
+            <button type="button" key={k} className={c} onMouseEnter={select} onFocus={select} onClick={select} aria-label={`${hex(seg)}:${hex(o)}`}>
               {hex(peek(p), 2)}
-            </span>
+            </button>
           );
         })}
       </div>,

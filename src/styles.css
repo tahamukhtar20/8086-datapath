@@ -866,6 +866,10 @@ p {
   font-size: 12px;
 }
 .hex-cell {
+  font: inherit;
+  font-family: var(--mono);
+  color: var(--text);
+  cursor: pointer;
   width: 30px;
   text-align: center;
   font-size: 13px;
@@ -881,6 +885,17 @@ p {
 .hex-cell.w {
   border-color: var(--gold);
   color: var(--gold);
+}
+.hex-cell.picked {
+  outline: 1px solid var(--text);
+}
+.byte-note {
+  margin-top: 10px;
+  font-size: 13px;
+  min-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hex-cell.sp {
   box-shadow: inset 0 -2px 0 var(--dst);
